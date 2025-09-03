@@ -53,7 +53,7 @@ class Character
     public IReadOnlyList<Item> EquippedItems => _equippedItems;
 
     // Событие для проверки возможности экипировки предмета
-    public event Predicate<Item> OnEquip;
+    public event Predicate<Item> OnCanEquip;
     
     // Конструктор класса Character
     public Character(string name, int strength, int agility)
@@ -66,8 +66,8 @@ class Character
     // Метод для попытки экипировать предмет
     public void TryEquip(Item item)
     {
-        bool canEquip = OnEquip?.Invoke(item) ?? false;
-        if (canEquip && !EquippedItems.Contains(item))
+        bool canEquip = OnCanEquip?.Invoke(item) ?? false;
+        if (canEquip)
         {
             _equippedItems.Add(item);
             Console.WriteLine($"{item.Type} можно экипировать");
@@ -87,7 +87,7 @@ class Character
             return;
         }
         
-        foreach (Item item in ItemsAvailableToEquip.Where( item => !EquippedItems.Contains(item)))
+        foreach (Item item in ItemsAvailableToEquip.Except(EquippedItems))
         {
             TryEquip(item);
         }
@@ -205,8 +205,8 @@ class Program
         Enemy enemy = new Enemy("Демон", random.Next(3, 11), random.Next(3, 11));
 
         // Подписка на событие
-        player.OnEquip += player.CanEquip;
-        enemy.OnEquip += enemy.CanEquip;
+        player.OnCanEquip += player.CanEquip;
+        enemy.OnCanEquip += enemy.CanEquip;
 
         // Первичная экипировка предметов игроком
         player.EquipAllItems();
@@ -221,7 +221,7 @@ class Program
         player.StartBattle(enemy);
         
         // Отписка от события
-        player.OnEquip -= player.CanEquip;
-        enemy.OnEquip -= enemy.CanEquip;
+        player.OnCanEquip -= player.CanEquip;
+        enemy.OnCanEquip -= enemy.CanEquip;
     }
 }
